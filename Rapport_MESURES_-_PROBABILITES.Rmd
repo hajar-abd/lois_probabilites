@@ -1,0 +1,695 @@
+---
+title: 'TD 2 '
+author: "Hajar Abdaoui"
+date: "2024-09-20"
+output:
+  word_document: 
+    reference_docx: word_reference_r.docx
+  html_document: default
+  pdf_document: default
+fontsize: 11pt
+editor_options:
+  markdown:
+    wrap: 72
+---
+
+\newpage
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	fig.align = "center",
+	message = FALSE,
+	warning = FALSE,
+	out.width = "50%"
+)
+```
+
+```{r packages, include=FALSE}
+# Chargement des packages nécessaires 
+library(tinytex)
+library(dplyr)
+library(ggplot2)
+library(knitr)
+```
+
+# Introduction
+
+Dans le logiciel R, on peut simuler très simplement à peu près toutes
+les lois classiques. Dans ce TP, on se propose, pour chaque loi usuelle,
+de simuler des échantillons, et de calculer la moyenne et la variance de
+ces échantillons, ainsi que faire des graphiques représentant ces lois.
+Chacunes des étapes sera détaillée et interprétée.
+
+# Loi discrètes
+
+Une loi de probabilité est dite discrète quand l'expérience aléatoire
+associée à cette loi ne peut prendre qu'un nombre limité de valeurs
+distinctes (qualitatives ou quantitatives) [1]
+
+## Loi uniforme discrète
+
+Soit $X$ une variable aléatoire distribuée selon une loi uniforme
+discrète sur $\{1,…,n\}$ .
+
+La distribution est définie comme suit :
+
+$$\forall {k} \in \{1,…,n\}, p(X=k)=\frac {1}{n} $$
+
+Dans le tableau ci-dessous, on simule un échantillon ech de taille
+$n = 30$ aléatoire de valeurs entières de 1 à 10 et calcule la
+probabilité d'apparition de chaque valeur sur l'echantillon total ech.
+
+```{r include=FALSE}
+n<-30
+ech<-sample(1:10,n,replace=T)
+table(ech)/n
+```
+
+Dans le graphique ci-dessous, on affiche ces probabilités d'apparition
+dans un diagramme en barres que l'on compare à la probabilité théorique
+uniforme. La probabilité théorique uniforme, représentée par la ligne
+rouge correspond la fréquence théorique attendue pour chaque valeur si
+elles étaient toutes tirées de manière égale (ici égale à 1/10).
+
+```{r}
+barplot(table(ech)/n)
+abline(h=1/10,col="red")
+```
+
+On remarque que la répartition réelle des valeurs dans notre échantillon
+par rapport à la distribution uniforme attendue n'est pas identique.
+Cela est dû à la variabilité aléaoire des valeurs de notre échantillon.
+
+## Loi de Bernoulli
+
+Cette loi est nommée $\mathcal{B}(p)$. On dit que
+$X \rightsquigarrow \mathcal{B}(p)$ si et seulement si $X$ est une
+variable binaire telle que (on parle de loi succès/échec) :
+
+$$P(X=1)= p $$ et $$P(X=0)= 1 - p = q$$
+
+C'est un cas particulier de la loi binomiale avec $n=1$ . On peut
+vérifier facilement par le calcul que $E[X] = p$ et
+$V[X] = pq = p(1-p)$.
+
+On génère un échantillon de taille $n = 30$ à partir d'une loi de
+Bernoulli de paramètre $p=0.3$ et calcule les probabilités de succès et
+d'échecs.
+
+```{r include=FALSE}
+n<- 30  # taille de l'échantillon
+p<-0.3   # paramètre de la loi de Bernoulli
+esp<-p
+var<-p*(1-p)
+ech<-rbinom(n,size = 1,prob = p) # size = 1 correspond à la loi de Bernoulli
+table(ech)/n
+```
+
+Ainsi, ici notre échantillon suit une loi de Bernoulli
+$\mathcal{B}(1, 0.3)$. En théorie, chaque succès (1) a une probabilité
+$p = 0.3$, et chaque échec (0) avec une probabilité $1-p = 1-0.3 = 0.7$.
+Si la moyenne de l'échantillon est proche de cette valeur, cela confirme
+que l'échantillon suit bien la distribution attendue.
+
+```{r}
+paste("La moyenne de l'échantillon est ",mean(ech),", sachant que l'espérance vaut",esp)
+```
+
+Idem pour la variance de l'échantillon, si elle est proche de cette
+valeur, cela confirme que l'échantillon suit bien la distribution
+attendue.
+
+```{r}
+paste("La variance de l'échantillon est ",round(var(ech),2),", sachant que la variance de la loi vaut",p*(1-p))
+```
+
+Dans notre cas, les probabilités empiriques de succès et d'échecs dans
+notre échantillon tiré aléatoirement correspondent aux probabilités
+théoriques d'une loi de Bernoulli.
+
+## Loi binomiale
+
+On dit que $X$ suit une loi binomiale, notée $\mathcal{B}(n,p)$.
+
+On dit que cette loi est la somme de lois de Bernoulli indépendantes et
+de même paramètre, ce qui revient à compter le nombre de succès (nombre
+de 1) parmi les $n$ expériences. Cela revient donc à faire $n$ fois une
+expérience (qui a une probabilité $p$ de réussir) identique, de façon
+indépendante. $X$ représente donc le nombre de succès.
+
+Pour résumer, soit $Y_i\rightsquigarrow \mathcal{B}(p)$pour
+$i=1, ..., n$ où les $Y_i$ sont indépendants. On note
+$$\ X = \sum_{i=1}^n Y_i \rightsquigarrow \mathcal{B}(n,p)$$ Les valeurs
+possibles pour la variable $X$ sont $\{0, ..., n\}$ et
+$$\forall k  \in \{0, ..., n\}, p_k = p(X = k) = C_n^k p^k (1-p)^{n-k} $$
+On peut remarquer que la somme des probabilités est bien égale à 1 grâce
+à la formule du binôme de Newton :
+$$(a+b)^n = \sum_{k=0}^n C_n^k a^k b^{n-k}  $$
+
+En prenant $a=p$ et $b=q=1-p$ on trouve :
+
+$$\sum_{k=0}^n p_k =  C_n^k p^k (1-p)^{n-k} = (p+1-p)^n = 1^n = 1$$
+
+L'espérence de cette loi est (grâce à la **linéarité de l'espérence**)
+$$E[X] = \sum_{i=1}^nE[Y_i] = \sum_{i=1}^np = np $$
+
+La variance de cette loi est :
+
+$$V[X] = \sum_{i=1}^n V[Y_i] = \sum_{i=1}^n p(1-p) = np(1-p)$$
+
+Attention, dans cette dernière formule, il ne faut pas croire que nous
+utilisons la linéarité de la variance ! **La variance n'est pas
+linéaire**.
+
+Pour rappel :
+
+$$ V[aX] = a^2 V[X]$$ et
+
+$$V[X_1 + X_2] = V[X_1] + V[X_2] + 2 * cov(X_1, X_2)$$
+
+Enfin si $X_1$ et $X_2$ sont indépendantes, alors $$cov(X_1, X_2) = 0$$
+
+Dans le cadre de cette loi, prenons pour exemple la simulation de 100
+tirages d'une loi binomiale $\mathcal{B}(10,0.8)$. Chaque tirage
+représente le nombre de succès sur $n = 10$ essais indépendants avec une
+probabilité de succès $p = 0.8$. Le tableau suivant nous montre la
+probabilité d'obtenir x succès sur 10 :
+
+```{r include=FALSE}
+N<- 100 # taille de l'échantillon
+n<- 10L  # premier paramètre de la loi
+p<- 0.8 # deuxième paramètre de la loi
+
+ech<-rbinom(N,n,p)
+
+table(ech)/N
+```
+
+Nous calculons ensuite les probabilités théoriques probabilités
+théoriques associées à chaque valeur x du nombre de succès dans une
+distribution binomiale $\mathcal{B}(10,0.8)$
+
+```{r}
+dbinom(x=0:n,size = n,prob = p)
+```
+
+En comparant les probabilités de notre simulation de 100 tirages avec
+les probabilités théoriques, on remarque qu'elles sont différentes. Cela
+est dû à la variabilité aléatoire dans l'échantillonage. Avec un
+échantillon plus grand, les probabilités empiriques de notre échantillon
+devraient converger vers les probabilités théoriques (selon la loi des
+grands nombres).
+
+## Loi géométrique
+
+On dit que $X$ suit une loi géométrique, notée $G(p)$ avec 0 \< $p$ \<
+1.
+
+Cette loi correspond au schéma suivant. On répète, de façon
+indépendante, une même expérience (qui a une probabilité $p$ de réussite
+et une probabilité $q = 1-p$ d'échec) et on note $X$ le rang du premier
+succès. Les valeurs prises par $X$ sont donc $X (\Omega) = N^*$ et les
+probabilités associés sont :
+$$\forall k \in N^*, p_k = P(X=k) = (1-p)^{k-1}p = q^{k-1}p$$ On
+remarque que ces probabilités $p_k$ définissent une suite géométrique de
+raison $q$. Pour rappel, si 0 \< $q$ \< 1 alors
+$$\sum_{k=n_0}^nq^k = q^{n_0} \frac {1-q^{n-n_0+1}}{1-q}$$ et donc par
+passage à la limite $$\sum_{k=n_0}^{+\infty}q^k = \frac{q^{n_0}}{1-q}$$
+En appliquant cette formule pour calculer la somme des probabilités, on
+trouve :
+
+$$\sum_{k=1}^{+\infty}p^k = \sum_{k=1}^{+\infty}q^{k-1}p = p\sum_{k=0}^{+\infty}q^k = p/(1-q) = 1$$
+L'espérence de cette loi est :
+$$E[X] = \sum_{k=1}^{+\infty}kp_k = p \sum_{k=1}^{+\infty}kq^{k-1} = p/(1-q)^2 = 1/p$$
+
+La variance vaut :
+$$V[X] = E[X^2] - E[X]^2= \frac{1+q}{p^2} -\frac{1}{p^2} = \frac{q}{p^2}$$
+
+En R, il faut faire attention car il y a un décalage d'une unité. La
+définition dans R pour une loi géométrique est le nombre d'échecs avant
+la première réussite. Ainsi, les valeurs prises pour cette variable sont
+dans $N$ et non pas $N^*$.
+
+On simule un échantillon de taille 25 selon une loi géométrique avec
+$p=0.3$, qui modélise le nombre d'échecs avant le premier succès dans
+une série d'essais de Bernoulli. Le diagramme ci dessous nous montre la
+répartition du nombre d'échecs avant le premier succès pour les 25
+simulations. On s'attend à ce que les échecs se concentrent davantage
+sur les petites valeurs (0, 1, 2) en raison de la probabilité de succès
+relativement élevée (0.3).
+
+```{r}
+n <- 25 # taille de l'échantillon
+p <- 0.3 # paramètre de la loi 
+ech<-rgeom(n,p) # simulation de la loi
+barplot(table(ech))
+```
+
+## Loi de Poisson
+
+On dit que $X$ suit une loi de Poisson, notée $P(λ)$ avec $λ$\>0.
+
+On peut voir cette loi comme la loi des événements rares. Cette loi est
+une approximation de la loi binomiale, $B(n,p)$ lorsque $n$ est grand et
+$p$ petit (i.e. pour des événements rares). On pose alors $λ=np$. En
+pratique, on dit que cette approximation est bonne dès que $n>20$ et
+$p≤0.1$ et $np≤5$.
+
+Les valeurs possibles pour $X$ sont dans $N$ et les probabilités
+associées : $$ \forall k \in N, p_k = P(X =k) = e^{-λ} \frac{λ^k}{k!}$$
+
+On pourra vérifier (grâce à la définition de l'exponentielle
+$e^x=\sum_{k=0}^{+\infty}\frac{x^k}{k!}$) que :
+
+$$\sum_{k=0}^{+\infty}p_k = 1$$
+
+L'espérence d'une loi de Poisson de paramètre $\lambda$ est :
+
+$$\mathbb{E}[X] = \sum_{k=0}^{+\infty} k p_k = \sum_{k=1}^{+\infty} k p_k = \lambda e^{-\lambda} \sum_{k=1}^{+\infty} \frac{\lambda^{k-1}}{(k-1)!} = \lambda$$
+et donc la variance est égale à
+$$\mathrm{Var}(X) = \mathbb{E}[X^2] - \mathbb{E}[X]^2 = \lambda^2 + \lambda - \lambda^2 = \lambda$$
+
+Avec le logiciel R, on définit le paramètre de la loi de Poisson $λ$,
+qui représente à la fois la moyenne et la variance attendue de la
+distribution de Poisson. $λ$ représente le nombre d'occurences d'un
+évènement. Dans ce cas, $λ=3$, ce qui signifie que la distribution
+modélise un événement qui survient en moyenne 3 fois par unité de temps
+ou d'espace (selon le contexte). On génère ensuite un échantillon de
+taille $n = 25$ tiré de cette distribution. La moyenne empirique de
+l'échantillon devrait être proche de 3 si l'échantillon reflète bien la
+loi de Poisson avec $λ=3$.
+
+```{r}
+lambda <- 3 # paramètre de la loi de Poisson
+n <- 25 # taille de l'échantillon
+ech <- rpois(n,lambda) # simulation de la loi de Poisson
+mean(ech)
+```
+
+La moyenne empirique obtenue est proche de 3, cela confirme que
+l'échantillon suit bien la loi de Poisson attendue. On calcule
+maintenant la variance empirique de l'échantillon, qui devrait être
+proche de la variance théorique $λ=3$ si l'échantillon suit bien une
+distribution de Poisson.
+
+```{r}
+var(ech)
+```
+
+La variance empirique est proche de la variance théorique. Le graphique
+en barrre ci-dessous nous permet de visualiser la distribution des
+occurrences dans l'échantillon. La forme du diagramme devrait être
+centrée autour de 3 et montrer une diminution progressive des fréquences
+à mesure que les valeurs s'éloignent de la moyenne, conformément à la
+loi de Poisson.
+
+```{r}
+barplot(table(ech))
+```
+
+On remarque bien que les valeurs de notre échantillon sont centrées
+autour de 3 (valeur théorique). Ce qui signifi que l'échantillon tiré de
+la loi de Poisson reflète bien la moyenne théorique de la distribution,
+qui est $λ = 3$.
+
+# Loi continues
+
+Une loi de probabilité est dite continue quand l'expérience aléatoire
+associée à cette loi peut prendre n'importe quelle valeur dans un
+intervalle défini, ouvert ou non. [2]
+
+## Loi uniforme sur $[0,1]$, notée $U_{[0,1]}$
+
+On dit que $X$ suit une loi uniforme sur [0,1] si et seulement si (ssi)
+sa fonction densité est :
+
+$$\forall x \in \mathbb{R}, \ f(x) = \begin{cases} 1 & \text{si } x \in [0,1] \\ 0 & \text{sinon} \end{cases}$$
+
+La fonction de répartition pour la loi uniforme sur $[0, 1]$ est :
+
+$$ \forall x \in \mathbb{R}, \ F(x) = \int_{-\infty}^{x} f(t) \, dt = \begin{cases} 0 & \text{si } x < 0 \\ x & \text{si } x \in [0,1] \\
+1 & \text{si } x > 1 \end{cases}$$
+
+L'espérance de la loi uniforme pour $U_{[0,1]}$ est :
+
+$$
+\mathbb{E}[X] = \int_{-\infty}^{+\infty} x f(x) \, dx = \int_0^1 x \, dx = \left[ \frac{x^2}{2} \right]_0^1 = \frac{1}{2}
+$$ Et donc la variance vaut :
+
+$$
+\text{Var}[X] = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 = \frac{1}{3} - \frac{1}{4} = \frac{1}{12}
+$$
+
+Avec R, on génère un échantillon de taille $n = 30$ à partir d'une loi
+uniforme sur l'intervalle [0, 1] et calcule la moyenne empirique, qui
+devrait être proche de 0.5 si l'échantillon suit bien la distribution
+uniforme.
+
+```{r}
+n <- 30
+ech <- runif(n)
+mean(ech)
+```
+
+Ici, la moyenne est proche de 0.5. Calculons maintenant la variance
+empirique de l'échantillon. Celle ci devrait être proche de calcule la
+variance empirique, qui devrait être proche de 1/12 qui correspond à
+environ 0.0833(valeur théorique) si l'échantillon suit bien la
+distribution uniforme.
+
+```{r}
+var(ech)
+```
+
+Ici, la variance empirique se rapproche de la variance théorique. On
+peut donc dire que notre échantillon suit une distribition uniforme.
+
+Dans le graphique ci-dessous, Pour une loi uniforme $U(0,1)$, la densité
+théorique est constante et égale à 1 sur l'intervalle [0, 1].
+L'histogramme devrait montrer une distribution relativement plate
+(barres relativement uniformes) si l'échantillon suit bien une
+distribution uniforme.
+
+```{r}
+hist(ech,freq=F)
+```
+
+Les fluctuations qui apparaîssent sont dûes à la taille limitée de
+l'échantillon $(n=30)$
+
+## Loi uniforme sur [a,b], notée $U_{[a,b]}$, avec (a\<b)
+
+On dit que $X$ $\rightsquigarrow U_{[a,b]}$ ssi sa fonction densité est
+
+$$
+\forall x \in \mathbb{R}, \ f(x) = 
+\begin{cases} 
+\frac{1}{b-a} & \text{si } x \in [a,b] \\
+0 & \text{sinon}
+\end{cases}
+$$
+
+La fonction de répartition d’une loi uniforme sur $[a,b]$ est
+
+$$
+\forall x \in \mathbb{R}, \ F(x) = \int_{-\infty}^{x} f(t) \, dt =
+\begin{cases} 
+0 & \text{si } x < a \\
+\frac{x - a}{b - a} & \text{si } x \in [a,b] \\
+1 & \text{si } x > b
+\end{cases}
+$$
+
+L'espérance vaut :
+
+$$
+\mathbb{E}[X] = \int_{-\infty}^{+\infty} x f(x) \, dx = \int_a^b \frac{x}{b - a} \, dx = \frac{1}{b - a} \left[ \frac{x^2}{2} \right]_a^b = \frac{b^2 - a^2}{2(b - a)} = \frac{a + b}{2}
+$$
+
+Et donc la variance vaut :
+
+$$
+\text{Var}[X] = \mathbb{E}[X^2] - (\mathbb{E}[X])^2 = \frac{a^2 + ab + b^2}{3} - \frac{(a + b)^2}{4} = \frac{a^2 + ab + b^2}{3} - \frac{a^2 + 2ab + b^2}{4} = \frac{a^2 - 2ab + b^2}{12} = \frac{(b - a)^2}{12}
+$$
+
+**Théorème : Si** $X \rightsquigarrow U{[0,1]}$ alors
+$\$Y = (b - a)X + a \rightsquigarrow U{[a,b]}$.
+
+En R, il n’est pas utile de connaître ce théorème car la fonction
+*runif* permet de passer les bornes $a$ et $b$ en arguments.
+
+A l'aide de R, on simule un échantillon d'une loi uniforme sur
+l'intervalle [2,5] de taille $n=30$. Chaque valeur est tirée de façon
+aléatoire dans cet intervalle avec une probabilité égale pour chaque
+sous-intervalle. Dans le cas de cet exemple, la moyenne théorique est de
+$\mathbb{E}(X) = \frac{a + b}{2} = \frac{2 + 5}{2} = 3.5$
+
+```{r}
+n<-30
+ech<-runif(n,2,5) # simulation d'un échantillon d'une loi uniforme sur [2,5]
+mean(ech)
+```
+
+La moyenne empirique calculée à partir de l'échantillon devrait être
+proche de 3.5 si l'échantillon suit bien la distribution uniforme
+$U(2,5)$. De légères variations peuvent se produire avec un échantillon
+de taille $n=30$.
+
+La variance théorique est de :
+$\text{Var}(X) = \frac{(b - a)^2}{12} = \frac{(5 - 2)^2}{12} = \frac{9}{12} = 0.75$.
+Calculons ci-dessous, la variance empirique que nous pourrons comparer
+par la suite à la variance théorique. Si les deux sont proches, cela
+signifie que notre échantillon est distribué selon la loi uniforme sur
+l'intervalle [2,5].
+
+```{r}
+var(ech)
+```
+
+Le graphique ci-dessous produit un histogramme avec les densités
+empiriques et non les fréquences empiriques afin de visualiser la
+distribution de notre échantillon.\
+La densité théorique est de :
+$f(x) = \frac{1}{b - a} = \frac{1}{5 - 2} = \frac{1}{3} \quad \text{pour} \quad x \in [2, 5]$
+
+```{r}
+hist(ech,freq=F)
+```
+
+L'histogramme nous montre une distribution plate sur l'intervalle [2,
+5], ce qui confirme ainsi la distribution uniforme de notre échantillon
+sur ce même intervalle.
+
+## Loi Normale centrée réduite, notée $\mathcal{N}(0,1)$
+
+Si $X \rightsquigarrow \mathcal{N}(0,1)$ alors la fonction densité de
+$X$ est
+
+$$
+\forall x \in \mathbb{R}, \ f(x) = \frac{1}{\sqrt{2\pi}} e^{-\frac{x^2}{2}}
+$$
+
+Le premier paramètre de la loi normale est l'espérance de la loi et le
+second correspond à la variance de la loi. On peut remarquer que cette
+fonction est paire, i.e.$\forall x \in \mathbb{R}, \ f(-x) = f(x)$, ce
+qui implique une symétrie par rapport à l'axe des ordonnées.
+
+```{r}
+curve(dnorm,from = -4,to = 4,col="red",main="Densité de la loi Normale centrée réduite",ylab="",axes=F)
+axis(1,xaxp=c(-4,4,8))
+axis(2,pos=0,c(-1,1))
+```
+
+On peut également remarquer que la courbe s’approche très rapidement de
+l’axe des abscisses dès lors que l’on séloigne de l’espérance (ici 0).
+
+Prenons un exemple sur R. On simule une loi normale centrée réduite
+$\mathcal{N}(0,1)$ d'un échantillon de taille $n=100$ , c'est-à-dire une
+distribution normale avec une moyenne $μ=0$ et un écart-type $σ=1$.La
+moyenne empirique, c'est à dire la moyenne des probabilités de notre
+échantillon, devrait être proche de 0 (moyenne théorique $µ = 0$).
+
+```{r}
+n<-100
+ech<-rnorm(n) # simulation d'une loi normale centrée réduite
+mean(ech)
+```
+
+Calculons mainteant sa variance empirique qui elle devrait se rapprocher
+de 1 (moyenne théorique de la loi normale centrée réduite).
+
+```{r}
+var(ech)
+```
+
+Les variations de moyenne et de variance peuvent s'expliquer notamment
+par le caractère alétoire des valeurs de notre échantillon et sa taille.
+L'histogramme ci-dessous représente les densités des probabilités sur un
+intervalle de valeurs en 10 barres affichées sur l'axe des abscisses,
+ici limité à [-3, 3], ce qui correspond à environ 3 écarts-types autour
+de la moyenne pour une loi normale.
+
+Pour une loi normale centrée réduite, l'histogramme devrait montrer une
+forme en cloche symétrique, centrée autour de 0, avec la majorité des
+valeurs comprises entre -3 et 3.
+
+```{r}
+hist(ech,freq=F,breaks=10,xlim = c(-3,3))
+```
+
+Sur notre graphique, on remarque que l'histogramme ressemble bien a une
+forme de cloche centrée autour de 0, soit notre échantillon est bien
+distribué selon une loi normale.
+
+L'espérance de la loi normale centrée réduite vaut :
+
+$$
+\mathbb{E}[X] = \int_{-\infty}^{+\infty} x f(x) \, dx = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} xe^{-\frac{x^2}{2}} \, dx = 0
+$$ Le moment d'ordre 2 (qui est aussi la variance car l'espérance est
+nulle) se calcule par une intégration par parties :
+
+$$
+\text{Var}[X] = \mathbb{E}[X^2] = \int_{-\infty}^{+\infty} x^2 f(x) \, dx = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx = \frac{2}{\sqrt{2\pi}} \int_0^{+\infty} x^2 e^{-\frac{x^2}{2}} \, dx
+$$
+
+Or
+
+$$
+\int_0^1 x^2 e^{-\frac{x^2}{2}} \, dx = \left[ -xe^{-\frac{x^2}{2}} \right]_0^1 + \int_0^{+\infty} e^{-\frac{x^2}{2}} \, dx = \sqrt{\frac{\pi}{2}}
+$$
+
+et donc :
+
+$$
+V[X] = 1
+$$
+
+## Loi Normale $\mathcal{N}(μ,σ^2)$
+
+On dit que $X \rightsquigarrow \mathcal{N}(\mu, \sigma^2)$ si sa
+fonction densité est :
+
+$$
+\forall x \in \mathbb{R}, \ f(x) = \frac{1}{\sigma \sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}
+$$
+
+On pourra vérifier que l'intégrale de cette fonction sur $\mathbb{R}$
+vaut bien 1. $\mu$ représente l'espérance de la loi et $\sigma^2$ la
+variance. Par exemple, à l'aide de R, on trace la courbe de densité
+d'une distribution normale $\mathcal{N}(1,4)$ (moyenne 1, variance 4)
+sur l'intervalle [−5,7].
+
+```{r}
+curve(dnorm(x,mean=1,sd=2),from = -5,to = 7,col="red",main="Densité de la loi N(1,4)",axes=F,ylab="") # Attention, on rentre l'écart-type et non la variance !!!
+axis(1,xaxp = c(-5,7,12))
+axis(2,pos=0,c(-1,1))
+```
+
+La forme de la courbe est la cloche typique d'une distribution normale,
+centrée autour de 1, avec une dispersion plus large (due à l'écart-type
+de 2). La courbe montre où les valeurs sont les plus probables, avec un
+maximum autour de la moyenne (1) et une dispersion contrôlée par
+l'écart-type (2)
+
+**Si** $X \rightsquigarrow \mathcal{N}(\mu, \sigma^2)$ alors
+$\frac{X - \mu}{\sigma} \rightsquigarrow \mathcal{N}(0, 1)$
+
+Par exemple, nous générons un échantillon nommé ech de taille 30
+($n = 30$) à partir d'une loi normale de moyenne 𝜇= 0 et d'écart-type 𝜎=
+2. On obtient ainsi 30 valeurs aléatoires suivant une distribution
+normale centrée sur 0 avec une dispersion caractérisée par un écart-type
+de 2. Nous affichons uniquement les 20 premières valeurs de cet
+échantillon.
+
+```{r}
+n<-30
+ech<-rnorm(n,mean = 0,sd = 2)
+head(ech,n = 20)
+```
+
+Nous générons ensuite un histogramme des densités représentant notre
+échantillon ech auquel nous superposons une courbe de densité.
+L'histogramme contient ainsi une courbe de densité théorique d'une
+distribution normale 𝑁(0,2) sur l'intervalle [−6,6] en rouge. On
+remarque que les données générées ressemblent à la distribution normale
+théorique.
+
+```{r}
+hist(ech, freq=F)
+curve(dnorm(x,mean = 0,sd = 2),from = -6,to = 6,ylab="densité",add=T,col="red")
+```
+
+Idem ici pour la fonction de répartition théorique tracée dans le
+graphique ci-dessous. Le graphique montre comment les valeurs de notre
+échantillon se répartissent par rapport à la distribution normale
+théorique.
+
+```{r}
+plot(ecdf(ech))
+curve(pnorm(x,mean = 0,sd = 2),from = -6,to = 6,ylab="Fonction de répartition",add=T,col="red")
+```
+
+Dans le tableau suivant, la première ligne représente les quantiles
+théoriques pour une distribution normale 𝑁(0,2) aux probabilités de 5%,
+10%, 25%, etc. La deuxième ligne représente les quantiles empiriques de
+l'échantillon ech aux mêmes probabilités. Cette comparaison permet de
+voir si les quantiles empiriques de ton échantillon correspondent bien
+aux quantiles théoriques d'une distribution normale. Si les valeurs sont
+proches, cela confirme que l'échantillon suit une distribution normale.
+
+```{r include=FALSE}
+quantile.normale<-qnorm(p = c(0.05,0.1,0.25,0.5,0.75,0.9,0.95),mean = 0,sd = 2)
+quantile.echantillon<-quantile(x = ech,probs = c(0.05,0.1,0.25,0.5,0.75,0.9,0.95))
+rbind(quantile.echantillon,quantile.normale)
+```
+
+## Loi exponentielle
+
+La loi exponentielle est la version continue de la loi géométrique [3].
+On dit que $X$ suit une loi exponentielle de paramètre $\lambda$ \> 0,
+ce que l'on note $X \rightsquigarrow \mathcal{E}(\lambda)$ ssi sa
+fonction densité est :
+
+$$
+\forall x \in \mathbb{R}, \quad f(x) = 
+\begin{cases} 
+\lambda e^{-\lambda x} & \text{si } x \geq 0 \\
+0 & \text{sinon}
+\end{cases}
+$$ 
+
+L'espérance d'une loi exponentielle est
+$$\mathbb{E}[X] = \int_{-\infty}^{+\infty} x f(x) \, dx = \frac{1}{\lambda} $$
+et donc la variance vaut
+$$\text{Var}(X) = \mathbb{E}[X^2] - \mathbb{E}[X]^2 = \frac{1}{\lambda^2}$$
+
+On peut mettre en oeuvre cela en R. On génère un échantillon de taille
+30 à partir d'une loi exponentielle avec un paramètre $λ=0.001$ et
+calcule la moyenne empirique, qui devrait être proche de la moyenne
+théorique. La moyenne théorique avec $λ=0.001$ est de :
+$$\mathbb{E}(X) = \frac{1}{\lambda} = \frac{1}{0.001} = 1000$$
+
+```{r}
+n <- 30              # taille de l'échantillon
+lambda <- 10^{-3}    # paramètre de la loi exponentielle
+ech<- rexp(n,rate = lambda)
+mean(ech)
+```
+
+La variance empirique de notre échantillon devrait elle aussi se
+rapprocher de la variance théorique si les probabilités des valeurs de
+notre échantillon suivent bien une distribution exponentielle. La
+variance théorique avec $λ=0.001$ est de
+$$\text{Var}(X) = \frac{1}{\lambda^2} = \frac{1}{(0.001)^2} = 1,000,000$$
+
+```{r}
+var(ech)
+```
+
+Il peut y avoir des écarts par rapport aux valeurs théoriques car la
+taille de l'échantillon est relativement petite (n = 30).
+
+Par la suite, on crée un histogramme des valeurs de l'échantillon avec
+les densités (plutôt que les fréquences absolues), ce qui permet de
+visualiser la forme de la distribution.
+
+```{r}
+hist(ech,freq=F)
+```
+
+La loi exponentielle a une densité qui décroît exponentiellement. Dans
+cet histogramme, on remarque plus de valeurs proches de 0, avec une
+queue longue qui s'étend vers des valeurs plus élevées. Cette forme
+asymétrique est caractéristique d'une loi exponentielle. Enfin, on trace
+la fonction de répartition empirique de l'échantillon. Cette fonction
+montre la proportion des observations qui sont inférieures ou égales à
+une certaine valeur. La fonction de répartition empirique devrait
+refléter la forme théorique d'une fonction de répartition exponentielle.
+C'est à dire qu'elle doit avoir une croissance rapide au début (près de
+0) qui se stabilise progressivement, formant ainsi une asymptote vers 1
+à mesure que les valeurs augmentent.
+
+```{r}
+plot(ecdf(ech))
+```
